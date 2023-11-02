@@ -1,0 +1,26 @@
+{
+  "name": "employee-tracker",
+  "version": "1.0.0",
+  "description": "This is the module 12 challenge for the OSU bootcamp.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/theboss1485/employee-tracker.git"
+  },
+  "keywords": [
+    "database",
+    "tracker"
+  ],
+  "author": "Gabriel Morrow",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/theboss1485/employee-tracker/issues"
+  },
+  "homepage": "https://github.com/theboss1485/employee-tracker#readme",
+  "dependencies": {
+    "inquirer": "^8.2.4"
+  }
+}
