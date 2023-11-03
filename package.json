@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/theboss1485/employee-tracker#readme",
   "dependencies": {
-    "inquirer": "^8.2.4"
+    "inquirer": "^8.2.4",
+    "mysql2": "^3.6.3"
   }
 }
