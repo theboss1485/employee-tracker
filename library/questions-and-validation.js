@@ -1,10 +1,13 @@
 const mysql2 = require('mysql2');
 
+/* The departmentList array is used to keep track of the departments that are in the database outside of this file. 
+This is necessary because I needed index.js to have access to the list of departments in order to circumvent the 
+inquirer bug discussed here: https://github.com/SBoudrias/Inquirer.js/issues/912*/
 let departmentList = []
-let roleList = [];
-let employeeList = [];
 
-
+/* The questions are nested in a multi-dimensional array. The top-level object contains an object for each main set of questions 
+(one or more) that the program asks.  The arrays inside those objects contain individual question objects for each individual
+question in each set. */
 const questions = [
     
     {
@@ -44,7 +47,7 @@ const questions = [
                 type: "input",
                 name: "departmentName",
                 message: "What is the name of the department?",
-                default: "Forensics",
+                filter: trimTitle,
                 validate: async (input) => await validateTitle(input, "department", 1)
                  
             }
@@ -58,7 +61,7 @@ const questions = [
                 type: "input",
                 name: "roleName",
                 message: "What is the name of the role?",
-                default: "Investigator",
+                filter: trimTitle,
                 validate: (input) => validateTitle(input, "role")
             },
             {
@@ -83,14 +86,12 @@ const questions = [
                 type: "input",
                 name: "employeeFirstName",
                 message: "What is the employee's first name?",
-                default: "Gabriel",
                 validate: (input) => validateName(input, "first")
             },
             {
                 type: "input",
                 name: "employeeLastName",
                 message: "What is the employee's last name?",
-                default: "Morrow",
                 validate: (input) => validateName(input, "last")
 
             },
@@ -101,6 +102,9 @@ const questions = [
                 choices: () => helperQuery("role")
             },
             {
+                /* Before the system lets the user pick a manager 
+                for a new employee it adds the "No Manager" option to the list
+                to allow the user to ignify that the employee doesn't have a manager. */
                 type: "list",
                 name: "employeeManager",
                 message: "Who is the employee's manager?",
@@ -125,6 +129,9 @@ const questions = [
                 choices: () => helperQuery("employee")
             },
             {
+                /* When the user goes to update an employee's role, the system won't allow the user to reassign the employee's current
+                role to the employee.  If the employee's current role is the only role in the database, the system allows the user to press
+                Enter to return to the main part of the program. */
                 type: "list",
                 name: "newRoleOfEmployee",
                 message: "Which role do you want to assign to the selected employee?",
@@ -156,6 +163,9 @@ const questions = [
                 choices: () => helperQuery("employee")
             },
             {
+                /* When the user goes to update an employee's manager, the system won't allow the user to reassign the employee's current
+                manager to the employee.  If there are no other employees in the database, the system allows the user to press
+                Enter to return to the main part of the program. */
                 type: "list",
                 name: "newManagerOfEmployee",
                 message: "Which manager do you want to assign to the selected employee?",
@@ -260,6 +270,9 @@ const questions = [
     }
 ];
 
+/*This is the object that holds the database connection.  The reason I put it here
+is that putting it in its own file would have caused a circular dependency, since both
+index.js and this file use it.*/
 const database = mysql2.createConnection(
 
     {
@@ -270,6 +283,7 @@ const database = mysql2.createConnection(
     },
 );
 
+/* This function  */
 function validateName(input, whichName){
 
 
@@ -297,6 +311,13 @@ function validateName(input, whichName){
     }
 }
 
+function trimTitle(input){
+    
+    return input.trim();
+}
+
+/* The program uses this function to validate the titles of both departments and roles to both make sure they are unique and also
+to make sure they contain only letters, numbers, spaces, and hyphens.*/
 async function validateTitle(input, queryType, useEmployeeList = 0){
 
     let existingTitles = undefined
@@ -329,6 +350,8 @@ async function validateTitle(input, queryType, useEmployeeList = 0){
     }
 }
 
+/* The program uses this function to validate the salary to make sure it is only numbers, or that it is a number
+with two decimal places. */
 function validateSalary(input){
 
     let titleRegex = /^(?!.*\.$)[0-9]+\.{0,1}[0-9]{0,2}$/
@@ -343,6 +366,9 @@ function validateSalary(input){
     }
 }
 
+/* The program uses this function to get the names/titles of departments, roles, and employees when 
+it needs to do something such as providing the names of departments, roles and employees as choices
+to answer a question. */
 async function helperQuery(tableName){
 
     let namesOrTitlesArray = undefined;
@@ -378,24 +404,17 @@ async function helperQuery(tableName){
     return namesOrTitlesArray;
 }
 
-function updateList(passedBackList, listType){
+/* This function updates the global variable departmentList.  This allows 
+the program to avoid the inquirer bug I discussed at the top of this file. */
+function updateDepartmentList(passedBackList){
 
-    switch(listType){
-
-        case "department":
-            departmentList = passedBackList;
-            break;
-        case "role":
-            roleList = passedBackList;
-            break;
-        case "employee":
-            employeeList = passedBackList;
-            break;
-
-    }
-    
+    departmentList = passedBackList
 }
 
+/* This function gets the role that is assigned to a specified employee. 
+This is useful to allow the program to know what role an employee already has
+so that it can be removed from the list of other roles that the user can assign
+to the employee.*/
 async function getEmployeeRole(employeeName){
 
     let employeeId = await getId(employeeName, "employee");
@@ -408,6 +427,10 @@ async function getEmployeeRole(employeeName){
     return roleTitle[0][0].title;
 }
 
+/* This function gets the manager that is assigned to a specified employee. 
+This is useful to allow the program to know what manager an employee already has
+so that it can be removed from the list of other employees that the user can assign
+to manage the employee in question.*/
 async function getEmployeeManager(employeeName){
 
     let employeeId = await getId(employeeName, "employee");
@@ -421,6 +444,9 @@ async function getEmployeeManager(employeeName){
     return employeeManager[0][0].full_name;
 }
 
+/* Getting a department, role, or employee Id is such a common task for this program 
+that I wrote a function to do it.  This is used quite a bit when generating 
+a lot of the SQL queries that this program uses. */
 async function getId(responseText, idType){
 
     let selectQueryVariable = undefined;
@@ -457,4 +483,5 @@ async function getId(responseText, idType){
     return id;
 }
 
-module.exports = {questions, database, helperQuery, departmentList, employeeList, roleList, updateList, getId};
+module.exports = {questions, database, departmentList, 
+                  helperQuery, updateDepartmentList, getId};

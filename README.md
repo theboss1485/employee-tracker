@@ -29,6 +29,8 @@ For the options of deleting a department, an employee, or a user, you will first
 
 For the option of viewing the total utilized budget of a department, you will need to select a department.  Then, the system will total up the salaries of all the employees who are in roles that belong to that department, and display the result in a table.
 
+The "Quit the Application" option will stop the program.
+
 
 
 ## Credits
