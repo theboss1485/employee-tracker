@@ -139,12 +139,14 @@ const questions = [
                 name: "newRoleOfEmployee",
                 message: "Which role do you want to assign to the selected employee?",
                 choices: async (answers) => {
+
+                    let roleList = await helperQuery("role")
                     let employee = answers.employeeName;
                     let employeeRole = await getEmployeeRole(employee)
                     let newRoleList = roleList.filter((role) => role !== employeeRole)
                     if(newRoleList.length === 0){
 
-                        console.log("There is only one employee, and no roles exist other than what the employee already has.  Please add another role before" +
+                        console.log("There is only one employee, and no roles exist other than what the employee already has.  Please add another role before " +
                                     "attempting to update the employee's current role.  Press Enter to return to the main menu.")
                         
                         newRoleList.push("Return");
@@ -174,9 +176,9 @@ const questions = [
                 message: "Which manager do you want to assign to the selected employee?",
                 choices: async (answers) =>{
 
-                    let newEmployeeList = await helperQuery("employee")
+                    let employeeList = await helperQuery("employee")
 
-                    newEmployeeList = newEmployeeList.filter((person) => person !== answers.employeeName);
+                    let newEmployeeList = employeeList.filter((person) => person !== answers.employeeName);
                     let employeeManager = await getEmployeeManager(answers.employeeName);
                     if(employeeManager !== null){
 
@@ -187,7 +189,7 @@ const questions = [
                     if(newEmployeeList.length === 0){
 
                         console.log("There is only one employee, and as such the only option is for that employee to not have a manager. "+
-                                    "Please add an employee before you attempt to update this employee's manager.  Press Eneter to return to the main menu");
+                                    "Please add an employee before you attempt to update this employee's manager.  Press Enter to return to the main menu");
 
                         newEmployeeList.push("Return");
                     }
@@ -284,6 +286,7 @@ const sequelize = new Sequelize(
     {
       host: 'localhost',
       dialect: 'mysql',
+      logging: false,
       port: 3306
     }
   );
@@ -393,7 +396,7 @@ async function helperQuery(tableName){
 
         query = `SELECT name FROM ${tableName}`;
 
-        data = await database.promise().query(query)
+        data = await sequelize.query(query)
 
         namesOrTitlesArray = data[0].map(datum => datum.name);
 
@@ -402,7 +405,7 @@ async function helperQuery(tableName){
 
         query = `SELECT CONCAT(first_name, ' ', last_name) AS full_name
                  FROM ${tableName}`;
-        data = await database.promise().query(query)
+        data = await sequelize.query(query)
 
         namesOrTitlesArray = data[0].map(datum => datum.full_name);
     }    
@@ -428,7 +431,7 @@ async function getEmployeeRole(employeeName){
                         FROM role LEFT JOIN employee ON employee.role_id = role.id 
                         WHERE employee.id = ${employeeId}`
     
-    let roleTitle = await database.promise().query(getRoleQuery)
+    let roleTitle = await sequelize.query(getRoleQuery)
     return roleTitle[0][0].title;
 }
 
@@ -445,7 +448,7 @@ async function getEmployeeManager(employeeName){
                            LEFT JOIN employee e2 ON e1.manager_id = e2.id
                            WHERE e1.id = ${employeeId}`
     
-    let employeeManager = await database.promise().query(getManagerQuery)
+    let employeeManager = await sequelize.query(getManagerQuery)
     return employeeManager[0][0].full_name;
 }
 
@@ -480,7 +483,7 @@ async function getId(responseText, idType){
         let idQuery = `SELECT id FROM ${idType}
                        WHERE ${selectQueryVariable} = "${responseText}"`;
     
-        let idData = await database.promise().query(idQuery);
+        let idData = await sequelize.query(idQuery);
     
         id = idData[0][0].id;
     }

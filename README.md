@@ -10,7 +10,13 @@ This README isn't that long, so N/A.
 
 ## Installation
 
-First, clone my GitHub repository with the "git clone" command.  Then, you will need to install the necessary dependencies, which are inquirer, and mysql2.  You can install them by running the command "npm install".  After this, I recommend running the .sql files in the database folder to create and seed the database.  To do this, first, navigate to the database folder in the program structure.  Then, run the command 
+First, clone my GitHub repository with the "git clone" command.  Then, you will need to install the necessary dependencies, which are inquirer, and mysql2.  You can install them by running the command "npm install".  You will then need to create a .env file with the following lines in it:
+
+DB_NAME='company_db'
+DB_PASSWORD='[your mysql password]'
+DB_USER='[your mysql username]'
+
+After this, I recommend running the .sql files in the database folder to create and seed the database.  To do this, first, navigate to the database folder in the program structure.  Then, run the command 
 "mysql -u [your mysql username] -p [your mysql password]" and then enter your password.  Once you are inside the mysql shell, run the commands "source schema.sql" and "source seeds.sql" to create and seed the database.
 
 ## Usage

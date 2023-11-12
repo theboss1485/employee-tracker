@@ -274,7 +274,7 @@ async function updateEmployeeRole(){
 
     if(response === "success"){
 
-        console.log(`Updated the role of employee ${responses.employeeName} to "${responses.newRoleOfEmployee}".`);
+        console.log(`Updated the role of employee '${responses.employeeName}' to '${responses.newRoleOfEmployee}'.`);
     }
 }
 
@@ -312,11 +312,11 @@ async function updateEmployeeManager(){
 
         if(managerId === "NULL"){
 
-            console.log(`Updated employee ${responses.employeeName} to have no manager`);
+            console.log(`Updated employee "${responses.employeeName}" to have no manager`);
         
         } else {
 
-            console.log(`Updated the manager of employee ${responses.employeeName} to ${responses.newManagerOfEmployee}.`);
+            console.log(`Updated the manager of employee '${responses.employeeName}' to '${responses.newManagerOfEmployee}'.`);
         }
     } 
 }
