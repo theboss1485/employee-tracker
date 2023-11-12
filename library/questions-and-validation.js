@@ -1,4 +1,7 @@
-const mysql2 = require('mysql2');
+//const mysql2 = require('mysql2');
+
+const Sequelize = require('sequelize');
+require('dotenv').config();
 
 /* The departmentList array is used to keep track of the departments that are in the database outside of this file. 
 This is necessary because I needed index.js to have access to the list of departments in order to circumvent the 
@@ -272,16 +275,18 @@ const questions = [
 
 /*This is the object that holds the database connection.  The reason I put it here
 is that putting it in its own file would have caused a circular dependency, since both
-index.js and this file use it.*/
-const database = mysql2.createConnection(
-
+index.js and this file use it.  I took code the code to get the connection up and running
+from one of the module 13 activities. */
+const sequelize = new Sequelize(
+    process.env.DB_NAME,
+    process.env.DB_USER,
+    process.env.DB_PASSWORD,
     {
-        host: '127.0.0.1',
-        user: 'root',
-        password: '02Co:v!L$dk7#p5',
-        database: 'company_db'
-    },
-);
+      host: 'localhost',
+      dialect: 'mysql',
+      port: 3306
+    }
+  );
 
 /* This function  */
 function validateName(input, whichName){
@@ -378,7 +383,7 @@ async function helperQuery(tableName){
     if(tableName === "role"){
 
         query = `SELECT title FROM ${tableName}`;
-        data = await database.promise().query(query)
+        data = await sequelize.query(query)
 
         namesOrTitlesArray = data[0].map(datum => datum.title);
     
@@ -483,5 +488,5 @@ async function getId(responseText, idType){
     return id;
 }
 
-module.exports = {questions, database, departmentList, 
+module.exports = {questions, sequelize, departmentList, 
                   helperQuery, updateDepartmentList, getId};

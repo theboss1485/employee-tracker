@@ -1,4 +1,4 @@
-let {questions, database, 
+let {questions, sequelize, 
     departmentList, roleList, employeeList, 
     helperQuery, updateList, getId, updateDepartmentList} = 
     require('./library/questions-and-validation.js')
@@ -462,7 +462,7 @@ async function queryDatabase(query, queryType){
     let returnValue = undefined
     try {
 
-       let data = await database.promise().query(query);
+       let data = await sequelize.query(query);
 
         if(queryType === "Select"){
             
