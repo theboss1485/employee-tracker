@@ -10,7 +10,13 @@ This README isn't that long, so N/A.
 
 ## Installation
 
-First, clone my GitHub repository with the "git clone" command.  Then, you will need to install the necessary dependencies, which are inquirer, and mysql2.  You can install them by running the command "npm install".  After this, I recommend running the .sql files in the database folder to create and seed the database.  To do this, first, navigate to the database folder in the program structure.  Then, run the command 
+First, clone my GitHub repository with the "git clone" command.  Then, you will need to install the necessary dependencies, which are inquirer, and mysql2.  You can install them by running the command "npm install".  You will then need to create a .env file with the following lines in it:
+
+DB_NAME='company_db'
+DB_PASSWORD='[your mysql password]'
+DB_USER='[your mysql username]'
+
+After this, I recommend running the .sql files in the database folder to create and seed the database.  To do this, first, navigate to the database folder in the program structure.  Then, run the command 
 "mysql -u [your mysql username] -p [your mysql password]" and then enter your password.  Once you are inside the mysql shell, run the commands "source schema.sql" and "source seeds.sql" to create and seed the database.
 
 ## Usage
@@ -28,6 +34,8 @@ For the options of viewing employees by manager and viewing employees by departm
 For the options of deleting a department, an employee, or a user, you will first need to select a department, an employee, or a user, respectively, and then the system will remove the record in question from the database.
 
 For the option of viewing the total utilized budget of a department, you will need to select a department.  Then, the system will total up the salaries of all the employees who are in roles that belong to that department, and display the result in a table.
+
+The "Quit the Application" option will stop the program.
 
 
 

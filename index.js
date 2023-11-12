@@ -1,6 +1,6 @@
-let {questions, database, 
+let {questions, sequelize, 
     departmentList, roleList, employeeList, 
-    helperQuery, updateList, getId} = 
+    helperQuery, updateList, getId, updateDepartmentList} = 
     require('./library/questions-and-validation.js')
 
 const inquirer = require('inquirer');
@@ -8,6 +8,7 @@ const inquirer = require('inquirer');
 
 let query = undefined;
 
+/* This is the 'main' function of the application, which controls the program flow. */
 async function begin(){
 
     let response = undefined;
@@ -18,9 +19,11 @@ async function begin(){
         let valid = false
 
         /* I put the switch statement inside of the try... catch statement so as to 
-        only need one catch block and not have to have one in every main function here.  */
+        only need one main catch block and not have to have one in every main function here.  */
         try{
 
+            /* To start, the user is asked the question "What would you like to do?" and given a list of options.  Each of those options
+            is a case in the switch statment below. */
             response = await askQuestion("startingQuestion");
             valid = true;
             
@@ -42,7 +45,7 @@ async function begin(){
                         break;
                     case "Add A Department":
                         departmentList = await helperQuery("department");
-                        updateList(departmentList, "department");
+                        updateDepartmentList(departmentList, "department");
                         await addDepartment();
                         break;
                     case "Add A Role":
@@ -91,6 +94,7 @@ async function begin(){
                 }
             }
 
+        //If the program catches an error, it will also stop the application.
         } catch(error){
 
             console.log(error);
@@ -99,31 +103,25 @@ async function begin(){
     }
 }
 
-
-async function ifListHasItemsProceedAsNormal(listTypes, messages, proceedFunction, proceedFunctionParameter = "", listShouldHaveMoreThanOneItem = 0){
+/* This function makes sure that for each of the three items where a list of departments, roles, and employees is necessary,
+the corresponding table in the database is actually populated with data.  If the table isn't populated, a message is printed to the user.
+This message is somewhat different depending on which question was asked.   Once the message is printed, control returns to the main 
+function of the program.*/
+async function ifListHasItemsProceedAsNormal(listTypes, messages, proceedFunction, proceedFunctionParameter = ""){
 
     let proceed = true
     let dataList = undefined;
 
+
+    /* The reason this for loop is necessary is that for one of the questions, 
+    needs to make sure that two of the database's tables have data, rather than just one.*/
     for(let counter = 0; counter < listTypes.length; counter++){
 
-        switch(listTypes[counter]){
+        dataList = await helperQuery(listTypes[counter]);
+        
+        if(listTypes[counter] === "department"){
 
-            case "department":
-                departmentList = await helperQuery("department");
-                updateList(departmentList, "department");
-                dataList = departmentList;
-                break;
-            case "role":
-                roleList = await helperQuery("role");
-                updateList(roleList, "role");
-                dataList = roleList;
-                break;
-            case "employee":
-                employeeList = await helperQuery("employee");
-                updateList(employeeList, "employee");
-                dataList = employeeList;
-                break;
+            updateDepartmentList()
         }
 
         if(dataList.length === 0){
@@ -132,25 +130,8 @@ async function ifListHasItemsProceedAsNormal(listTypes, messages, proceedFunctio
         }
     }
 
-    // if(listShouldHaveMoreThanOneItem !== 0){
-
-    //     switch(listShouldHaveMoreThanOneItem){
-
-    //         case 1:
-    //             alternateMessage = `There is only one employee, and no roles exist other than what the employee already has.  Please add another role before attempting to update the employee's current role.`
-    //             break;
-    //         case 2:
-    //             alternateMessage = `There is only one employee, and an employee can't manage himself in this application. Please add another employee before attempting to update the employee's manager.`
-    //             break;
-    //     }
-    // }
-
-    // if(dataList.length === 1 && (listShouldHaveMoreThanOneItem !== 0 ? true : false)){
-
-    //     console.log(alternateMessage);
-    // }
-
-
+    /* If the proper data is populated, the program proceeds as normal by calling the function that
+    was passed into the call to this current function. */
     if(proceed === true){
         
         switch(proceedFunctionParameter){
@@ -171,7 +152,7 @@ async function ifListHasItemsProceedAsNormal(listTypes, messages, proceedFunctio
     }
 }
 
-
+/* This is the function that the program calls when the user selects the option to view all departments. */
 async function viewDepartments(){
 
     let noDataMessage = "There are no departments to display.";
@@ -182,6 +163,7 @@ async function viewDepartments(){
     displayData(data[0], noDataMessage);
 }
 
+/* This is the function that the program calls when the user selects the option to view all roles. */
 async function viewRoles(){
 
     let noDataMessage = "There are no roles to display.";
@@ -194,6 +176,7 @@ async function viewRoles(){
     displayData(data[0], noDataMessage);
 }
 
+/* This is the function that the program calls when the user selects the option to view all employees. */
 async function viewEmployees(){
 
     let noDataMessage = "There are no employees to display.";
@@ -208,6 +191,8 @@ async function viewEmployees(){
     displayData(data[0], noDataMessage);
 }
 
+/* The functions for adding departments, roles, and employees take the responses that the user gives and assemble them 
+into SQL INSERT queries.  Once program adds the data to the database, it prints a message to the user. */
 async function addDepartment(){
 
     let responses = await askQuestion("addDepartment");
@@ -265,6 +250,9 @@ async function addEmployee(){
     }
 }
 
+
+/* The program calls this function when the user chooses to update an employee's role.  It takes the user's responses and assembles them into an UPDATE query.
+Once the role is updated, the program prints a message to the user. */
 async function updateEmployeeRole(){
 
     let responses = await askQuestion("updateEmployeeRole");
@@ -286,10 +274,12 @@ async function updateEmployeeRole(){
 
     if(response === "success"){
 
-        console.log(`Updated the role of employee ${responses.employeeName} to "${responses.newRoleOfEmployee}".`);
+        console.log(`Updated the role of employee '${responses.employeeName}' to '${responses.newRoleOfEmployee}'.`);
     }
 }
 
+/* The program calls this function when the user chooses to update an employee's manager.  It takes the user's responses and assembles them into an UPDATE query.
+Once the manager is updated, the program prints a message to the user. */
 async function updateEmployeeManager(){
 
     let responses = await askQuestion("updateEmployeeManager");
@@ -322,15 +312,17 @@ async function updateEmployeeManager(){
 
         if(managerId === "NULL"){
 
-            console.log(`Updated employee ${responses.employeeName} to have no manager`);
+            console.log(`Updated employee "${responses.employeeName}" to have no manager`);
         
         } else {
 
-            console.log(`Updated the manager of employee ${responses.employeeName} to ${responses.newManagerOfEmployee}.`);
+            console.log(`Updated the manager of employee '${responses.employeeName}' to '${responses.newManagerOfEmployee}'.`);
         }
     } 
 }
 
+/* This function is called when the user chooses to view employees by manager.  It takes the user's responses, and creates a JOIN statment out of them,
+so as to retrieve a manager's employees and those employees' role titles and departments all at once. */
 async function viewEmployeesByManager(){
 
     let responses = await askQuestion("viewEmployeesByManager");
@@ -365,6 +357,9 @@ async function viewEmployeesByManager(){
     displayData(returnedData[0], noDataMessage)
 }
 
+
+/* This function is called when the user chooses to view employees by department.  It takes the user's responses and creates a JOIN statment out of them,
+so as to retrieve a department's employees, and those employees' role titles and managers all at once. */
 async function viewEmployeesByDepartment(){
 
     let responses = await askQuestion("viewEmployeesByDepartment");
@@ -384,6 +379,8 @@ async function viewEmployeesByDepartment(){
     displayData(returnedData[0], noDataMessage)
 }
 
+/* This function is called whenever the user chooses to delete one of the three types of data.  The function 
+takes the user's response to decide which record to delete, deletes the record, and then prints a message to the user. */
 async function deleteRecord(deletionType){
 
     let responses = undefined;
@@ -422,6 +419,10 @@ async function deleteRecord(deletionType){
     
 }
 
+/* The program calls this function whenever the user wants to view the total budget of a department.
+The function takes the user's response, and then it takes the ID of the department the user wanted 
+and puts it into a SQL query that pulls the name of the department and the sum of the salaries
+of the roles of all the employees that belong to that department. */
 async function viewDepartmentBudget(){
 
     let responses = await askQuestion("viewDepartmentBudget");
@@ -443,6 +444,7 @@ async function viewDepartmentBudget(){
     console.table(returnedData[0]);
 }
 
+/* This program uses this function to ask questions of the user and wait for his or her input. */
 async function askQuestion(questionName){
 
     let questionToBeAsked = questions.find(question => question.name === questionName);
@@ -451,12 +453,16 @@ async function askQuestion(questionName){
     return responses;
 }
 
+
+/* The program uses this function to query the database with most of the queries that this application
+uses.  For queries that aren't SELECT queries, if such a query is successful, the function returns a 
+value indicating as such, and then this makes the calling function display a message to the user. */
 async function queryDatabase(query, queryType){
 
     let returnValue = undefined
     try {
 
-       let data = await database.promise().query(query);
+       let data = await sequelize.query(query);
 
         if(queryType === "Select"){
             
@@ -475,7 +481,14 @@ async function queryDatabase(query, queryType){
         return returnValue;
 }
 
+/* This function is called when the application is creating an employee.  The functionchecks to see 
+if there are any employees with the same name in the database.  If there any, the system adds a space 
+and a number to the end of the employee's name, so as to differentiate the employee from the other employee(s)
+with the same name. */
 async function filterName(firstName, lastName){
+
+    firstName = firstName.trim();
+    lastName = lastName.trim();
 
     let currentEmployees = await helperQuery("employee");
 
@@ -503,6 +516,8 @@ async function filterName(firstName, lastName){
     } 
 }
 
+/* This function displays the various tables of data to the user that the queries return.  If a query 
+returns no data, the program prints a message informing the user of this.*/
 function displayData(data, noDataMessage){
 
     if(data.length !== 0){
