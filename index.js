@@ -94,7 +94,7 @@ async function begin(){
                 }
             }
 
-        //If the program catches an error, it will also stop the application.
+        //If the program catches an error, it will stop the application.
         } catch(error){
 
             console.log(error);
@@ -114,7 +114,7 @@ async function ifListHasItemsProceedAsNormal(listTypes, messages, proceedFunctio
 
 
     /* The reason this for loop is necessary is that for one of the questions, 
-    needs to make sure that two of the database's tables have data, rather than just one.*/
+    needs to make sure that two of the database's tables have data, rather than just one table.*/
     for(let counter = 0; counter < listTypes.length; counter++){
 
         dataList = await helperQuery(listTypes[counter]);
@@ -131,7 +131,7 @@ async function ifListHasItemsProceedAsNormal(listTypes, messages, proceedFunctio
     }
 
     /* If the proper data is populated, the program proceeds as normal by calling the function that
-    was passed into the call to this current function. */
+    was passed into the call to this current function ifListHasItemsProceedAsNormal(). */
     if(proceed === true){
         
         switch(proceedFunctionParameter){
@@ -415,8 +415,7 @@ async function deleteRecord(deletionType){
     if(response === "success"){
 
         console.log(successMessage);
-    }
-    
+    } 
 }
 
 /* The program calls this function whenever the user wants to view the total budget of a department.
@@ -486,14 +485,11 @@ async function queryDatabase(query, queryType){
         return returnValue;
 }
 
-/* This function is called when the application is creating an employee.  The functionchecks to see 
-if there are any employees with the same name in the database.  If there any, the system adds a space 
-and a number to the end of the employee's name, so as to differentiate the employee from the other employee(s)
+/* This function is called when the application is creating an employee.  The function checks to see 
+if there are any employees with the same name in the database as what the user entered.  If there any, the system adds a space 
+and a number to the end of the employee's name, so as to differentiate the new employee from the other employee(s)
 with the same name. */
 async function filterName(firstName, lastName){
-
-    firstName = firstName.trim();
-    lastName = lastName.trim();
 
     let currentEmployees = await helperQuery("employee");
 

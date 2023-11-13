@@ -49,7 +49,7 @@ const questions = [
                 type: "input",
                 name: "departmentName",
                 message: "What is the name of the department?",
-                filter: trimTitle,
+                filter: trimAndCapitalizeTitleOrName,
                 validate: async (input) => await validateTitle(input, "department", 1)
                  
             }
@@ -63,7 +63,7 @@ const questions = [
                 type: "input",
                 name: "roleName",
                 message: "What is the name of the role?",
-                filter: trimTitle,
+                filter: trimAndCapitalizeTitleOrName,
                 validate: (input) => validateTitle(input, "role")
             },
             {
@@ -88,12 +88,14 @@ const questions = [
                 type: "input",
                 name: "employeeFirstName",
                 message: "What is the employee's first name?",
+                filter: trimAndCapitalizeTitleOrName,
                 validate: (input) => validateName(input, "first")
             },
             {
                 type: "input",
                 name: "employeeLastName",
                 message: "What is the employee's last name?",
+                filter: trimAndCapitalizeTitleOrName,
                 validate: (input) => validateName(input, "last")
 
             },
@@ -106,7 +108,7 @@ const questions = [
             {
                 /* Before the system lets the user pick a manager 
                 for a new employee it adds the "No Manager" option to the list
-                to allow the user to ignify that the employee doesn't have a manager. */
+                to allow the user to signify that the employee doesn't have a manager. */
                 type: "list",
                 name: "employeeManager",
                 message: "Who is the employee's manager?",
@@ -288,7 +290,6 @@ const questions = [
 is that putting it in its own file would have caused a circular dependency, since both
 index.js and this file use it.  The Xpert Learning Assistant AI gave me this code.*/
 const connection = mysql2.createConnection(
-    
     {
         host: process.env.DB_HOST,
         database: process.env.DB_NAME,
@@ -298,9 +299,8 @@ const connection = mysql2.createConnection(
   );
 
 /* This function does a basic check on the first and last names that the user enters to make sure that they conform to a basic
-regular expression.*/
+regular expression.  It also checks to make sure the names aren't more than 30 characters each.*/
 function validateName(input, whichName){
-
 
     /*I took the regular expression for the last name from https://stackoverflow.com/questions/2385701/regular-expression-for-first-and-last-name
     and modified it as necessary.*/
@@ -315,20 +315,29 @@ function validateName(input, whichName){
         nameRegex = /^[A-Za-z ,.'-]+$/;
     }
 
-    if(nameRegex.test(input) === true){
-
-        return true;
-
-    } else {
+    if(nameRegex.test(input) !== true){
 
         return `That was an invalid response.  First names can only contain A-Z and a-z characters.  Last names can only contain those plus
                 spaces, commas, periods, apostrophes, and hyphens.`
     }
+
+    if(input.length > 30){
+
+        return "That was an invalid response.  The entered first or last name must be at least one character and no more than 30 characters.  Try again."
+
+    } else {
+
+        return true;
+    }
 }
 
-function trimTitle(input){
+/* This function trims and capitalizes role titles, department names, and employee names. */
+function trimAndCapitalizeTitleOrName(input){
     
-    return input.trim();
+    let trimmedInput = input.trim().toLowerCase();
+
+    //The Xpert Learning Assistant AI Chatbot gave me this line of code.
+    return trimmedInput.charAt(0).toUpperCase() + trimmedInput.slice(1);
 }
 
 /* The program uses this function to validate the titles of both departments and roles to both make sure they are unique and also
@@ -355,29 +364,41 @@ async function validateTitle(input, queryType, useEmployeeList = 0){
 
     let titleRegex = /^[a-zA-Z0-9\ -]+$/;
 
-    if(titleRegex.test(input) === true){
+    if(titleRegex.test(input) !== true){
 
-       return true;
+
+        return "That was an invalid response.  The title of a department or role can only contain letters, numbers, spaces, and hyphens.  Try again.";
+    }
+    
+
+    if(input.length > 31){
+
+        return "The name of a department or title of a role must be between 1 and 30 characters, inclusive.  Your input is too long.  Try again."
     
     } else {
 
-        return "That was an invalid response.  The title of a department or role can only contain letters, numbers, spaces, and hyphens.  Try again.";
+        return true;
     }
 }
 
 /* The program uses this function to validate the salary to make sure it is only numbers, or that it is a number
-with two decimal places. */
+with two decimal places.  It also makes sure the salary is greater than 0 and less than 100 million.*/
 function validateSalary(input){
 
     let titleRegex = /^(?!.*\.$)[0-9]+\.{0,1}[0-9]{0,2}$/;
 
-    if(titleRegex.test(input) === true){
-
-        return true
-    
-    } else {
+    if(titleRegex.test(input) !== true){
 
         return "That was an invalid response.  A salary can only contain numbers, potentially followed by a period, and then another two numbers.";
+    }
+
+    if(input < 0.01 || input > 100000000){
+
+        return "That was an invalid response.  An employee's salary must be greater than zero and less than or equal to 100,000,000 (don't include the commas!).  Try again."
+
+    } else {
+        
+        return true
     }
 }
 
@@ -420,7 +441,7 @@ async function helperQuery(tableName){
 }
 
 /* This function updates the global variable departmentList.  This allows 
-the program to avoid the inquirer bug I discussed at the top of this file. */
+the program to avoid the inquirer bug I mentioned at the top of this file. */
 function updateDepartmentList(passedBackList){
 
     departmentList = passedBackList
@@ -453,7 +474,7 @@ async function getEmployeeRole(employeeName){
 
 /* This function gets the manager that is assigned to a specified employee. 
 This is useful to allow the program to know what manager an employee already has
-so that it can be removed from the list of other employees that the user can assign
+so that he or she can be removed from the list of other employees that the user can assign
 to manage the employee in question.*/
 async function getEmployeeManager(employeeName){
 
@@ -477,7 +498,7 @@ async function getEmployeeManager(employeeName){
     
 }
 
-/* Getting a department, role, or employee Id is such a common task for this program 
+/* Getting a department, role, or employee id is such a common task for this program 
 that I wrote a function to do it.  This is used quite a bit when generating 
 a lot of the SQL queries that this program uses. */
 async function getId(responseText, idType){
