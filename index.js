@@ -1,4 +1,4 @@
-let {questions, sequelize, 
+let {questions, connection, 
     departmentList, roleList, employeeList, 
     helperQuery, updateList, getId, updateDepartmentList} = 
     require('./library/questions-and-validation.js')
@@ -429,12 +429,17 @@ async function viewDepartmentBudget(){
 
     let departmentId =  await getId(responses.departmentName, "department");
 
-    let budgetQuery = `SELECT department.name AS department, SUM(salary) AS total_budget FROM department 
-                       LEFT JOIN role ON role.department_id = department.id
-                       LEFT JOIN employee ON employee.role_id = role.id
+    let budgetQuery = `SELECT department.name AS department, SUM(salary) AS total_budget FROM employee 
+                       LEFT JOIN role ON employee.role_id = role.id
+                       LEFT JOIN department ON role.department_id = department.id
                        WHERE department.id = ${departmentId};`
 
     let returnedData = await queryDatabase(budgetQuery, "Select");
+
+    if(returnedData[0][0].department === null){
+
+        returnedData[0][0].department = responses.departmentName;
+    }
 
     if(returnedData[0][0].total_budget === null){
 
@@ -462,7 +467,7 @@ async function queryDatabase(query, queryType){
     let returnValue = undefined
     try {
 
-       let data = await sequelize.query(query);
+       let data = await connection.promise().query(query);
 
         if(queryType === "Select"){
             

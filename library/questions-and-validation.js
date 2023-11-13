@@ -1,6 +1,5 @@
-//const mysql2 = require('mysql2');
+const mysql2 = require('mysql2');
 
-const Sequelize = require('sequelize');
 require('dotenv').config();
 
 /* The departmentList array is used to keep track of the departments that are in the database outside of this file. 
@@ -111,9 +110,9 @@ const questions = [
                 type: "list",
                 name: "employeeManager",
                 message: "Who is the employee's manager?",
-                choices: async (answers) =>{
+                choices: async (answers) => {
 
-                    let employeeArray = await helperQuery("employee")
+                    let employeeArray = await helperQuery("employee");
 
                     employeeArray.push("No Manager");
                     return employeeArray;
@@ -140,14 +139,24 @@ const questions = [
                 message: "Which role do you want to assign to the selected employee?",
                 choices: async (answers) => {
 
-                    let roleList = await helperQuery("role")
+                    let newRoleList = undefined;
+
+                    let roleList = await helperQuery("role");
                     let employee = answers.employeeName;
-                    let employeeRole = await getEmployeeRole(employee)
-                    let newRoleList = roleList.filter((role) => role !== employeeRole)
+                    let employeeRole = await getEmployeeRole(employee);
+                    if(employeeRole !== null){
+
+                        newRoleList = roleList.filter((role) => role !== employeeRole);
+
+                    } else {
+
+                        newRoleList = roleList;
+                    }
+                    
                     if(newRoleList.length === 0){
 
                         console.log("There is only one employee, and no roles exist other than what the employee already has.  Please add another role before " +
-                                    "attempting to update the employee's current role.  Press Enter to return to the main menu.")
+                                    "attempting to update the employee's current role.  Press Enter to return to the main menu.");
                         
                         newRoleList.push("Return");
                     }
@@ -277,21 +286,19 @@ const questions = [
 
 /*This is the object that holds the database connection.  The reason I put it here
 is that putting it in its own file would have caused a circular dependency, since both
-index.js and this file use it.  I took code the code to get the connection up and running
-from one of the module 13 activities. */
-const sequelize = new Sequelize(
-    process.env.DB_NAME,
-    process.env.DB_USER,
-    process.env.DB_PASSWORD,
+index.js and this file use it.  The Xpert Learning Assistant AI gave me this code.*/
+const connection = mysql2.createConnection(
+    
     {
-      host: 'localhost',
-      dialect: 'mysql',
-      logging: false,
-      port: 3306
+        host: process.env.DB_HOST,
+        database: process.env.DB_NAME,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
     }
   );
 
-/* This function  */
+/* This function does a basic check on the first and last names that the user enters to make sure that they conform to a basic
+regular expression.*/
 function validateName(input, whichName){
 
 
@@ -301,16 +308,16 @@ function validateName(input, whichName){
     
     if(whichName === "first"){
 
-        nameRegex = /^[A-Za-z]+$/
+        nameRegex = /^[A-Za-z]+$/;
 
     } else if (whichName === "last"){
 
-        nameRegex = /^[A-Za-z ,.'-]+$/
+        nameRegex = /^[A-Za-z ,.'-]+$/;
     }
 
     if(nameRegex.test(input) === true){
 
-        return true
+        return true;
 
     } else {
 
@@ -328,11 +335,11 @@ function trimTitle(input){
 to make sure they contain only letters, numbers, spaces, and hyphens.*/
 async function validateTitle(input, queryType, useEmployeeList = 0){
 
-    let existingTitles = undefined
+    let existingTitles = undefined;
     
     if(useEmployeeList === 1){
 
-        existingTitles = departmentList
+        existingTitles = departmentList;
     
     } else {
 
@@ -343,10 +350,10 @@ async function validateTitle(input, queryType, useEmployeeList = 0){
     
     if(foundTitle !== undefined){
 
-        return "That was an invalid response.  The title of a department or role must be unique. This title is already taken. Try again."
+        return "That was an invalid response.  The title of a department or role must be unique. This title is already taken. Try again.";
     }
 
-    let titleRegex = /^[a-zA-Z0-9\ -]+$/
+    let titleRegex = /^[a-zA-Z0-9\ -]+$/;
 
     if(titleRegex.test(input) === true){
 
@@ -354,7 +361,7 @@ async function validateTitle(input, queryType, useEmployeeList = 0){
     
     } else {
 
-        return "That was an invalid response.  The title of a department or role can only contain letters, numbers, spaces, and hyphens.  Try again. "
+        return "That was an invalid response.  The title of a department or role can only contain letters, numbers, spaces, and hyphens.  Try again.";
     }
 }
 
@@ -362,7 +369,7 @@ async function validateTitle(input, queryType, useEmployeeList = 0){
 with two decimal places. */
 function validateSalary(input){
 
-    let titleRegex = /^(?!.*\.$)[0-9]+\.{0,1}[0-9]{0,2}$/
+    let titleRegex = /^(?!.*\.$)[0-9]+\.{0,1}[0-9]{0,2}$/;
 
     if(titleRegex.test(input) === true){
 
@@ -370,7 +377,7 @@ function validateSalary(input){
     
     } else {
 
-        return "That was an invalid response.  A salary can only contain numbers, potentially followed by a period, and then another two numbers. "
+        return "That was an invalid response.  A salary can only contain numbers, potentially followed by a period, and then another two numbers.";
     }
 }
 
@@ -386,7 +393,7 @@ async function helperQuery(tableName){
     if(tableName === "role"){
 
         query = `SELECT title FROM ${tableName}`;
-        data = await sequelize.query(query)
+        data = await connection.promise().query(query);
 
         namesOrTitlesArray = data[0].map(datum => datum.title);
     
@@ -396,7 +403,7 @@ async function helperQuery(tableName){
 
         query = `SELECT name FROM ${tableName}`;
 
-        data = await sequelize.query(query)
+        data = await connection.promise().query(query);
 
         namesOrTitlesArray = data[0].map(datum => datum.name);
 
@@ -405,7 +412,7 @@ async function helperQuery(tableName){
 
         query = `SELECT CONCAT(first_name, ' ', last_name) AS full_name
                  FROM ${tableName}`;
-        data = await sequelize.query(query)
+        data = await connection.promise().query(query);
 
         namesOrTitlesArray = data[0].map(datum => datum.full_name);
     }    
@@ -429,10 +436,19 @@ async function getEmployeeRole(employeeName){
     
     let getRoleQuery = `SELECT role.title
                         FROM role LEFT JOIN employee ON employee.role_id = role.id 
-                        WHERE employee.id = ${employeeId}`
+                        WHERE employee.id = ${employeeId}`;
     
-    let roleTitle = await sequelize.query(getRoleQuery)
-    return roleTitle[0][0].title;
+    let roleTitle = await connection.promise().query(getRoleQuery);
+
+    if((roleTitle[0][0] !== undefined) && (roleTitle[0][0] !== null)){
+
+        return roleTitle[0][0].title;
+
+    } else {
+
+        return null;
+    }
+    
 }
 
 /* This function gets the manager that is assigned to a specified employee. 
@@ -446,10 +462,19 @@ async function getEmployeeManager(employeeName){
     let getManagerQuery = `SELECT CONCAT(e2.first_name, ' ', e2.last_name) as full_name
                            FROM employee e1
                            LEFT JOIN employee e2 ON e1.manager_id = e2.id
-                           WHERE e1.id = ${employeeId}`
+                           WHERE e1.id = ${employeeId}`;
     
-    let employeeManager = await sequelize.query(getManagerQuery)
-    return employeeManager[0][0].full_name;
+    let employeeManager = await connection.promise().query(getManagerQuery);
+
+    if((employeeManager[0][0].full_name !== undefined) && (employeeManager[0][0].full_name !== null)){
+
+        return employeeManager[0][0].full_name;
+
+    } else {
+
+        return null;
+    }
+    
 }
 
 /* Getting a department, role, or employee Id is such a common task for this program 
@@ -483,7 +508,7 @@ async function getId(responseText, idType){
         let idQuery = `SELECT id FROM ${idType}
                        WHERE ${selectQueryVariable} = "${responseText}"`;
     
-        let idData = await sequelize.query(idQuery);
+        let idData = await connection.promise().query(idQuery);
     
         id = idData[0][0].id;
     }
@@ -491,5 +516,5 @@ async function getId(responseText, idType){
     return id;
 }
 
-module.exports = {questions, sequelize, departmentList, 
+module.exports = {questions, connection, departmentList, 
                   helperQuery, updateDepartmentList, getId};
