@@ -12,8 +12,12 @@ This README isn't that long, so N/A.
 
 First, clone my GitHub repository with the "git clone" command.  Then, you will need to install the dependencies that the application uses, which are inquirer, mysql2, dotenv, and sequelize.  You can install them by running the command "npm install".  You will then need to create a .env file with the following lines in it:
 
+DB_HOST='localhost'
+
 DB_NAME='company_db'
+
 DB_PASSWORD='[your mysql password]'
+
 DB_USER='[your mysql username]'
 
 After this, I recommend running the .sql files in the database folder to create and seed the database.  To do this, first, navigate to the database folder in the program structure.  Then, run the command 
