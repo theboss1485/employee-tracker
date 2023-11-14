@@ -45,7 +45,7 @@ The "Quit the Application" option will stop the program.
 
 ## Walkthrough Video Explanation
 
-To view the walkthrough for this application please use the following link: [https://drive.google.com/file/d/1p5MMN_se9dCAjzSOv937VBePd5eCGBbS/view](https://drive.google.com/file/d/1p5MMN_se9dCAjzSOv937VBePd5eCGBbS/view/view).  This video was originally too long, so I trimmed it to get it under two minutes, as stipulated by the post on how to make a walkthrough video here: [https://coding-boot-camp.github.io/full-stack/computer-literacy/video-submission-guide](https://coding-boot-camp.github.io/full-stack/computer-literacy/video-submission-guide).  
+To view the walkthrough for this application please use the following link: [https://drive.google.com/file/d/1p5MMN_se9dCAjzSOv937VBePd5eCGBbS/view](https://drive.google.com/file/d/1p5MMN_se9dCAjzSOv937VBePd5eCGBbS/view).  This video was originally too long, so I trimmed it to get it under two minutes, as stipulated by the post on how to make a walkthrough video here: [https://coding-boot-camp.github.io/full-stack/computer-literacy/video-submission-guide](https://coding-boot-camp.github.io/full-stack/computer-literacy/video-submission-guide).  
 
 To start off, I type "node index.js" to start the program.  I then select the option to View all Departments, and the system displays the table of departments.  I do the same with the options to View All Roles and View All Employees, and the system displays the tables of roles and employees as well. 
 
